@@ -24,6 +24,7 @@ class BasePersistence(abc.ABC):
         :param game_id: existing game's unique ID
         :param round_name: user-provided name of the new round
         :raise NoSuchGame: if there is no game with such ID
+        :raise RoundExists: if there is already a round with such name in the game
         """
 
     @abc.abstractmethod
@@ -34,39 +35,27 @@ class BasePersistence(abc.ABC):
         The poll can be later accepted or rejected.
 
         :param game_id: existing game's unique id
-        :param round_name: user-provided name of the new round
+        :param round_name: user-provided name of the round to add a poll to
         :raise NoSuchGame: if there is no game with such ID
         :raise NoSuchRound: if there is no round with such name within the game
+        :raise RoundFinalized: if the round has already been finalized
         """
 
     @abc.abstractmethod
-    def accept_poll(self, game_id: str, round_name: str) -> None:
+    def finalize_round(self, game_id: str, round_name: str) -> None:
         """
         Accept the current poll and finalize the round.
 
         :param game_id: existing game's unique id
-        :param round_name: user-provided name of the new round
+        :param round_name: user-provided name of the round to finalize
         :raise NoSuchGame: if there is no game with such ID
         :raise NoSuchRound: if there is no round with such name within the game
         :raise NoActivePoll: if there no active poll in the round
+        :raise RoundFinalized: if the round has already been finalized
         """
 
     @abc.abstractmethod
-    def reject_poll(self, game_id: str, round_name: str) -> None:
-        """
-        Reject the current poll.
-
-        A new poll can be created later.
-
-        :param game_id: existing game's unique id
-        :param round_name: user-provided name of the new round
-        :raise NoSuchGame: if there is no game with such ID
-        :raise NoSuchRound: if there is no round with such name within the game
-        :raise NoActivePoll: if there no active poll in the round
-        """
-
-    @abc.abstractmethod
-    def cast_vote(self, game_id: str, round_name: str, voter_name: str) -> None:
+    def cast_vote(self, game_id: str, round_name: str, voter_name: str, estimation: str) -> None:
         """
         Cast a vote for the current poll.
 
@@ -75,9 +64,12 @@ class BasePersistence(abc.ABC):
         :param game_id: existing game's unique id
         :param round_name: user-provided name of the new round
         :param voter_name: name of the voter
+        :param estimation: the estimation the voter votes for
         :raise NoSuchGame: if there is no game with such ID
         :raise NoSuchRound: if there is no round with such name within the game
         :raise NoActivePoll: if there no active poll in the round
+        :raise RoundFinalized: if the round has already been finalized
+        :raise IllegalEstimation: if the voter voted for a card that doesn't take a part in the game
         """
 
     @abc.abstractmethod
@@ -85,5 +77,6 @@ class BasePersistence(abc.ABC):
         """
         Fetch and serialize all game's data to a dict.
 
+        :return: a dict loselessly serializable to JSON
         :raise NoSuchGame: if there is no game with such ID
         """
