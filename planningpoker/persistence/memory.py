@@ -2,7 +2,7 @@
 from planningpoker.persistence.base import BasePersistence
 from planningpoker.persistence.exceptions import (
     GameExists, RoundExists, NoSuchGame, NoSuchRound, NoActivePoll, RoundFinalized,
-    IllegalEstimation
+    IllegalEstimation,
 )
 
 
@@ -59,7 +59,7 @@ class ProcessMemoryPersistence(BasePersistence):
         try:
             return self.games[game_id]
         except KeyError:
-            raise NoSuchGame('The game with ID %r does not exist.' % game_id)
+            raise NoSuchGame(game_id)
 
     def _get_round(self, game_id: str, round_name: str, ensure_active: bool = False) -> None:
         """
@@ -75,11 +75,11 @@ class ProcessMemoryPersistence(BasePersistence):
         try:
             round = self._get_game(game_id)['rounds'][round_name]
         except KeyError:
-            raise NoSuchRound('The round with name %r was not found' % round_name)
+            raise NoSuchRound(game_id, round_name)
 
         if ensure_active and round['finalized'] is True:
-            raise RoundFinalized('The round %r of the game %r has already been finalized.'
-                                 % (round_name, game_id))
+            raise RoundFinalized(game_id, round_name)
+
         return round
 
     def add_game(self, game_id, cards: list) -> None:
@@ -93,7 +93,7 @@ class ProcessMemoryPersistence(BasePersistence):
         :raise GameExists: if a game with such ID already exists
         """
         if game_id in self.games:
-            raise GameExists('The game with ID %r already exists.' % game_id)
+            raise GameExists(game_id)
 
         self.games[game_id] = {
             'cards': cards,
@@ -114,7 +114,7 @@ class ProcessMemoryPersistence(BasePersistence):
         """
         game = self._get_game(game_id)
         if round_name in game['rounds']:
-            raise RoundExists('The round %r already exists in the game.' % game_id)
+            raise RoundExists(game_id, round_name)
 
         game['rounds_order'].append(round_name)
         game['rounds'][round_name] = {
@@ -150,8 +150,7 @@ class ProcessMemoryPersistence(BasePersistence):
         """
         round = self._get_round(game_id, round_name, ensure_active=True)
         if round['polls'] == []:
-            raise NoActivePoll('The round %r of the game %r has no active poll.'
-                               % (round_name, game_id))
+            raise NoActivePoll(game_id, round_name)
         round['finalized'] = True
 
     def cast_vote(self, game_id: str, round_name: str, voter_name: str, estimation: str) -> None:
@@ -174,13 +173,11 @@ class ProcessMemoryPersistence(BasePersistence):
         try:
             latest_poll = round['polls'][-1]
         except IndexError:
-            raise NoActivePoll('The round %r of the game %r has no active poll.'
-                               % (round_name, game_id))
+            raise NoActivePoll(game_id, round_name)
 
         game = self._get_game(game_id)
         if estimation not in game['cards']:
-            raise IllegalEstimation('The estimation %r is not one of available estimations in '
-                                    'this game.' % estimation)
+            raise IllegalEstimation(game_id, estimation)
 
         latest_poll[voter_name] = estimation
 
