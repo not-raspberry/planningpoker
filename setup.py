@@ -10,6 +10,9 @@ with open(os.path.join(here, 'README.rst')) as f:
     README = f.read()
 
 REQUIREMENTS = [
+    'aiohttp==0.17.0',
+    'aiohttp-session==0.1.2',
+    'aiohttp_session[pycrypto]',
 ]
 
 TEST_REQUIREMENTS = [
