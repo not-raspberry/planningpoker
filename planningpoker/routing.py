@@ -23,6 +23,8 @@ def route(method, path, name: str = None, *,
         """
         Add a route to `routes_dict`.
 
+        The decorator does not modify the function.
+
         :raise ValueError: if a route with such name or path exists
         """
         nonlocal name
@@ -32,7 +34,7 @@ def route(method, path, name: str = None, *,
         if name in routes_dict:
             raise ValueError('Route with name %r exists' % name)
 
-        if name in routes_dict:
+        if (method, path) in method_path_set:
             raise ValueError('Route with path %r exists.' % ((method, path),))
 
         routes_dict[name] = Route(method, path, handler_fn)

@@ -1,1 +1,1 @@
-from planningpoker.views import basic  # noqa
+from planningpoker.views import status  # noqa
