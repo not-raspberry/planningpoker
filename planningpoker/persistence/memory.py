@@ -16,10 +16,10 @@ class ProcessMemoryPersistence(BasePersistence):
 
     Not thread-safe.
 
-    The complete state is kept in the `self.games` dict.
+    The complete state is kept in the `self._games` dict.
 
     Schema:
-        self.games = {
+        self._games = {
             '<game-id>': {  # Game dict.
                 'cards': [1, 3, 5, 8, 13, ...],  # A list of possible estimations.
                 'rounds_order': ['<name-of-the-first-round>', ...],  # Rounds in order.
@@ -47,7 +47,7 @@ class ProcessMemoryPersistence(BasePersistence):
 
     def __init__(self):
         """Instantiate the memory persistence with no games."""
-        self.games = {}
+        self._games = {}
 
     def _get_game(self, game_id: str) -> None:
         """
@@ -57,7 +57,7 @@ class ProcessMemoryPersistence(BasePersistence):
         :raise NoSuchGame: if there is no game with such ID
         """
         try:
-            return self.games[game_id]
+            return self._games[game_id]
         except KeyError:
             raise NoSuchGame(game_id)
 
@@ -82,6 +82,11 @@ class ProcessMemoryPersistence(BasePersistence):
 
         return round
 
+    @property
+    def games_count(self) -> int:
+        """Return games count."""
+        return len(self._games)
+
     def add_game(self, game_id, cards: list) -> None:
         """
         Register a game.
@@ -92,10 +97,10 @@ class ProcessMemoryPersistence(BasePersistence):
         :param cards: a list of possible estimations in this game
         :raise GameExists: if a game with such ID already exists
         """
-        if game_id in self.games:
+        if game_id in self._games:
             raise GameExists(game_id)
 
-        self.games[game_id] = {
+        self._games[game_id] = {
             'cards': cards,
             'rounds_order': [],
             'rounds': {},

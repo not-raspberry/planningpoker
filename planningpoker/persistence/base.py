@@ -6,6 +6,11 @@ class BasePersistence(abc.ABC):
 
     """Base persistence backend."""
 
+    @property
+    @abc.abstractmethod
+    def games_count(self) -> int:
+        """Return games count."""
+
     @abc.abstractmethod
     def add_game(self, game_id, cards: list) -> None:
         """

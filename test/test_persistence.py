@@ -42,7 +42,7 @@ def backend_with_a_poll(backend_with_a_round):
 
 def test_initial_state(backend):
     """Check if the persistence backend is initially empty."""
-    assert backend.games == {}
+    assert backend.games_count == 0
 
 
 def test_add_game(backend):
@@ -54,7 +54,7 @@ def test_add_game(backend):
     with pytest.raises(GameExists):
         backend.add_game(game_id, [2, 4, 6, 10])
 
-    assert backend.games.keys() == {game_id}
+    assert backend.games_count == 1
     assert backend.serialize_game(game_id) == {
             'cards': cards,
             'rounds_order': [],
@@ -64,7 +64,7 @@ def test_add_game(backend):
     # It's possible to add a game with another ID - with the same cards.
     another_game_id = 'bbb'
     backend.add_game(another_game_id, cards)
-    assert backend.games.keys() == {game_id, another_game_id}
+    assert backend.games_count == 2
     assert backend.serialize_game(game_id) == backend.serialize_game(another_game_id)
 
 
