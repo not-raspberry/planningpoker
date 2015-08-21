@@ -18,6 +18,8 @@ REQUIREMENTS = [
 TEST_REQUIREMENTS = [
     'pylama==6.3.4',
     'pytest==2.7.2',
+    'requests==2.7.0',  # A synchronous HTTP client to use in tests.
+    'mirakuru==0.5.0',  # Process executor.
 ]
 
 setup(
