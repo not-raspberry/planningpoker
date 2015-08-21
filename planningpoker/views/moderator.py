@@ -17,6 +17,8 @@ def add_game(request, persistence):
         available_cards = (yield from request.post()).getall('cards')
     except KeyError:
         return json_response({'error': 'No card set provided.'}, status=400)
+    if len(available_cards) < 2:
+        return json_response({'error': 'Cannot play with less than 2 cards.'}, status=400)
 
     game_id = get_random_id()
     persistence.add_game(game_id, available_cards)
