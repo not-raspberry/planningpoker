@@ -46,8 +46,15 @@ def test_create_new_game_ok(client, cards):
     json = new_game.json()
 
     # Random game ID returned (no real way to test randomness):
-    assert json.keys() == {'game_id'}
+    assert json.keys() == {'game_id', 'game'}
     assert isinstance(json['game_id'], str)
     assert len(json['game_id']) > 10
+
+    # Empty game is returned.
+    assert json['game'] == {
+            'cards': cards,
+            'rounds_order': [],
+            'rounds': {},
+    }
 
     assert client.get('/status').json()['games_count'] == 1

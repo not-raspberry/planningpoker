@@ -1,5 +1,5 @@
 """JSON response helper."""
-import json
+import simplejson
 
 from aiohttp.web import Response
 
@@ -13,5 +13,5 @@ def json_response(response_data: dict, *args, **kwargs) -> Response:
     :param response_data: JSON to respond with
     :return: bytes with JSON that may contain unescaped (in JSON domain) unicode characters
     """
-    json_resp = json.dumps(response_data, ensure_ascii=False).encode()
+    json_resp = simplejson.dumps(response_data, ensure_ascii=False).encode()
     return Response(body=json_resp, *args, **kwargs)

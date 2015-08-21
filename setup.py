@@ -13,6 +13,7 @@ REQUIREMENTS = [
     'aiohttp==0.17.0',
     'aiohttp-session==0.1.2',
     'aiohttp_session[pycrypto]',
+    'simplejson==3.8.0',  # A JSON library that does not fear Decimals.
 ]
 
 TEST_REQUIREMENTS = [

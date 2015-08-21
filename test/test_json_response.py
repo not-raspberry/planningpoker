@@ -1,4 +1,6 @@
 """Test ``json_response`` helper."""
+from decimal import Decimal
+
 import pytest
 
 from planningpoker.json_response import json_response
@@ -7,6 +9,8 @@ from planningpoker.json_response import json_response
 @pytest.mark.parametrize('native_data, resulting_bytes', [
     (None, b'null'),
     ({}, b'{}'),
+    ({'a': Decimal(10)}, b'{"a": 10}'),
+    ({'a': Decimal('10.0')}, b'{"a": 10.0}'),
     ('łąż', '"łąż"'.encode()),
     (1, b'1'),
     ({'óóśś': 12}, '{"óóśś": 12}'.encode()),
