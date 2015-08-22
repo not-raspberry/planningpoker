@@ -7,7 +7,9 @@ from aiohttp_session import get_session
 from planningpoker.routing import route
 from planningpoker.random_id import get_random_id
 from planningpoker.json_response import json_response
-from planningpoker.persistence.exceptions import RoundExists, NoSuchRound, RoundFinalized
+from planningpoker.persistence.exceptions import (
+    RoundExists, NoSuchRound, RoundFinalized, NoActivePoll
+)
 
 
 def coerce_cards(cards: list) -> list:
@@ -95,5 +97,27 @@ def add_poll(request, persistence):
         return json_response({'error': 'Round does not exist.'}, status=404)
     except RoundFinalized:
         return json_response({'error': 'This round is finalized.'}, status=409)
+
+    return json_response({'game': persistence.serialize_game(game_id)})
+
+
+@route('POST', '/game/{game_id}/round/{round_name}/finalize')
+def finalize_round(request, persistence):
+    """Finalize an owned round."""
+    game_id = request.match_info['game_id']
+    round_name = unquote(request.match_info['round_name'])
+    user_session = yield from get_session(request)
+
+    if not client_owns_game(game_id, user_session):
+        return json_response({'error': 'The user is not the moderator of this game.'}, status=403)
+
+    try:
+        persistence.finalize_round(game_id, round_name)
+    except NoSuchRound:
+        return json_response({'error': 'Round does not exist.'}, status=404)
+    except NoActivePoll:
+        return json_response({'error': 'There is no active poll in this round.'}, status=404)
+    except RoundFinalized:
+        return json_response({'error': 'This round has already been finalized.'}, status=409)
 
     return json_response({'game': persistence.serialize_game(game_id)})

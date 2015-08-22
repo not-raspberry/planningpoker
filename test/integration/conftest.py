@@ -109,6 +109,13 @@ def game_round(moderator, game_id, request):
 
 
 @pytest.fixture
+def game_poll(moderator, game_round, game_id, request):
+    """Add a poll to the test game."""
+    poll_request = moderator.post('/game/%s/round/%s/new_poll' % (game_id, game_round))
+    assert poll_request.ok
+
+
+@pytest.fixture
 def moderator(_game):
     """Return a game moderator session."""
     _, moderator = _game
