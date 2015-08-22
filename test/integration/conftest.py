@@ -13,6 +13,8 @@ SITE_NETLOC = '%s:%s' % (HOST, PORT)
 SITE_ADDRESS = '%s://%s' % (SITE_SCHEME, SITE_NETLOC)
 EXECUTOR_TIMEOUT = 5
 
+GAME_CARDS = [1, 2, 3, 5, 8, 13, '?', 'Break?']
+
 
 class BackendSession(Session):
 
@@ -76,3 +78,38 @@ def client(backend):
     """Return a client session."""
     session = BackendSession(SITE_SCHEME, SITE_NETLOC)
     return session
+
+
+@pytest.fixture
+def _game(backend):
+    """
+    Create a game.
+
+    Not to be used in tests - use ``moderator`` and ``game_id`` fixtures.
+
+    :return: game ID and game moderator session
+    """
+    moderator = client(backend)
+    game = moderator.post('/new_game', data={'cards': GAME_CARDS})
+    assert game.ok
+    return game.json()['game_id'], moderator
+
+
+@pytest.fixture
+def moderator(_game):
+    """Return a game moderator session."""
+    _, moderator = _game
+    return moderator
+
+
+@pytest.fixture
+def game_id(_game):
+    """Return the ID of a game created by the ``moderator``."""
+    game_id, _ = _game
+    return game_id
+
+
+@pytest.fixture
+def game_cards():
+    """Return cards used by the game created by the ``moderator``."""
+    return GAME_CARDS
