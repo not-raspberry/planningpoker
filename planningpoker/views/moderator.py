@@ -2,15 +2,15 @@
 from decimal import Decimal, InvalidOperation
 from urllib.parse import unquote
 
-from aiohttp_session import Session, get_session
+from aiohttp_session import get_session
 
 from planningpoker.routing import route
 from planningpoker.random_id import get_random_id
 from planningpoker.json_response import json_response
-from planningpoker.persistence import BasePersistence
 from planningpoker.persistence.exceptions import (
     RoundExists, NoSuchRound, RoundFinalized, NoActivePoll
 )
+from planningpoker.views.identity import client_owns_game, get_or_assign_id
 
 
 def coerce_cards(cards: list) -> list:
@@ -25,15 +25,6 @@ def coerce_cards(cards: list) -> list:
         cast_cards.append(cast_card)
 
     return cast_cards
-
-
-def client_owns_game(game_id: str, session: Session, persistence: BasePersistence):
-    """Return True if the user who owns the session is the moderator of the game."""
-    try:
-        client_id = session['client_id']
-    except KeyError:
-        return False
-    return persistence.client_owns_game(game_id, client_id)
 
 
 @route('POST', '/new_game')
@@ -60,7 +51,7 @@ def add_game(request, persistence):
 
     moderator_session = yield from get_session(request)
     # Get or assign the moderator id:
-    moderator_id = moderator_session.setdefault('client_id', get_random_id())
+    moderator_id = get_or_assign_id(moderator_session)
     game_id = get_random_id()
     persistence.add_game(game_id, moderator_id, moderator_name, coerce_cards(available_cards))
 

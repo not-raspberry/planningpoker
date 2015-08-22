@@ -1,1 +1,1 @@
-from planningpoker.views import status, moderator # noqa
+from planningpoker.views import status, moderator, player  # noqa

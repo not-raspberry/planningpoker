@@ -4,7 +4,7 @@ import pytest
 from planningpoker.persistence import ProcessMemoryPersistence
 from planningpoker.persistence.exceptions import (
     GameExists, RoundExists, NoSuchGame, NoSuchRound, NoActivePoll, RoundFinalized,
-    IllegalEstimation, PlayerExists
+    IllegalEstimation, PlayerNameTaken, PlayerAlreadyRegistered,
 )
 
 GAME_ID = 'game-123456'
@@ -91,12 +91,17 @@ def test_add_player(backend_with_a_game):
 
     backend.add_player(GAME_ID, player_id, player_name)
 
-    with pytest.raises(PlayerExists):
+    with pytest.raises(PlayerAlreadyRegistered):
         backend.add_player(GAME_ID, player_id, player_name)
 
-    with pytest.raises(PlayerExists):
-        # PlayerExists is raised also when a player registers again with different name.
+    with pytest.raises(PlayerAlreadyRegistered):
+        # PlayerAlreadyRegistered is raised also when the player registers again with a different
+        # name.
         backend.add_player(GAME_ID, player_id, 'another name')
+
+    with pytest.raises(PlayerNameTaken):
+        # Another player tries to register with the same name.
+        backend.add_player(GAME_ID, 'another_player_id', player_name)
 
     players = backend.serialize_game(GAME_ID)['players']
     assert sorted(players) == sorted([MODERATOR_NAME, player_name])

@@ -47,6 +47,24 @@ class RoundError(PersistenceError):
         self.round_name = round_name
 
 
+class PlayerError(PersistenceError):
+
+    """Base for player errors."""
+
+    message = NotImplemented
+
+    def __init__(self, game_id: str, player_name: str):
+        """
+        Store the round name and the player name.
+
+        :param game: game ID
+        :param player_id: conflicting player id
+        :param player_name: conflicting player name
+        """
+        self.game_id = game_id
+        self.player_name = player_name
+
+
 class GameExists(GameError):
 
     """Raised if there is a game ID collision."""
@@ -106,18 +124,15 @@ class IllegalEstimation(PersistenceError):
         self.estimation = estimation
 
 
-class PlayerExists(PersistenceError):
+class PlayerNameTaken(PlayerError):
 
     """Raised when there is a player name conflict in a game."""
 
     message = "There is already a player with the name {s.player_name} in the game {s.game_id}."
 
-    def __init__(self, game_id: str, player_name: str):
-        """
-        Store the round name and the estimation.
 
-        :param game: game ID
-        :param player_name: conflicting player name
-        """
-        self.game_id = game_id
-        self.player_name = player_name
+class PlayerAlreadyRegistered(PlayerError):
+
+    """Raised when a player is already registered in a game."""
+
+    message = 'The player is already registered in the game {s.game_id} as {s.player_name}.'

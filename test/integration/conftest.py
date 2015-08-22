@@ -79,13 +79,25 @@ def client(backend):
 
 
 @pytest.fixture
+def another_client(backend):
+    """Return a client session with separate identity to the ``client``."""
+    return client(backend)
+
+
+@pytest.fixture
 def game_cards():
     """Return cards used by the game created by the ``moderator``."""
     return [1, 2, 3, 5, 8, 13, '?', 'Break?']
 
 
 @pytest.fixture
-def _game(backend, game_cards):
+def moderator_name():
+    """Return the name of the test game moderator."""
+    return 'Hannah'
+
+
+@pytest.fixture
+def _game(backend, game_cards, moderator_name):
     """
     Create a game.
 
@@ -96,7 +108,7 @@ def _game(backend, game_cards):
     moderator = client(backend)
     game = moderator.post('/new_game', data={
         'cards': game_cards,
-        'moderator_name': 'Hannah',
+        'moderator_name': moderator_name,
     })
     assert game.ok
     return game.json()['game_id'], moderator

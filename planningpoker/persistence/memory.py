@@ -2,7 +2,7 @@
 from planningpoker.persistence.base import BasePersistence
 from planningpoker.persistence.exceptions import (
     GameExists, RoundExists, NoSuchGame, NoSuchRound, NoActivePoll, RoundFinalized,
-    IllegalEstimation, PlayerExists
+    IllegalEstimation, PlayerNameTaken, PlayerAlreadyRegistered,
 )
 
 
@@ -121,7 +121,8 @@ class ProcessMemoryPersistence(BasePersistence):
         :param player_id: player's unique ID
         :param player_name: player's name to use in this game
         :raise NoSuchGame: if there is no game with given ID
-        :raise PlayerExists: if there is already a player with such name in the game
+        :raise PlayerNameTaken: if there is already a player with such name in the game
+        :raise PlayerAlreadyRegistered: if the player already belongs to the game
         """
         game = self._get_game(game_id)
 
@@ -129,7 +130,9 @@ class ProcessMemoryPersistence(BasePersistence):
         # After all, how many players are we going to have? Especially on deployments using
         # process memory to keep state.
         if player_id in game['players']:
-            raise PlayerExists(game_id, player_name)
+            raise PlayerAlreadyRegistered(game_id, player_name)
+        if player_name in game['players'].values():
+            raise PlayerNameTaken(game_id, player_name)
 
         game['players'][player_id] = player_name
 

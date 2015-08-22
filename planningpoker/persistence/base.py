@@ -36,7 +36,8 @@ class BasePersistence(abc.ABC):
         :param player_id: player's unique ID
         :param player_name: player's name to use in this game
         :raise NoSuchGame: if there is no game with given ID
-        :raise PlayerExists: if there is already a player with such name in the game
+        :raise PlayerNameTaken: if there is already a player with such name in the game
+        :raise PlayerAlreadyRegistered: if the player already belongs to the game
         """
 
     @abc.abstractmethod
