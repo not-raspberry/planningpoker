@@ -2,7 +2,7 @@
 from planningpoker.persistence.base import BasePersistence
 from planningpoker.persistence.exceptions import (
     GameExists, RoundExists, NoSuchGame, NoSuchRound, NoActivePoll, RoundFinalized,
-    IllegalEstimation,
+    IllegalEstimation, PlayerExists
 )
 
 
@@ -21,6 +21,7 @@ class ProcessMemoryPersistence(BasePersistence):
     Schema:
         self._games = {
             '<game-id>': {  # Game dict.
+                'players': ['Beatrice', ...],  # List of players names.
                 'cards': [1, 3, 5, 8, 13, ...],  # A list of possible estimations.
                 'rounds_order': ['<name-of-the-first-round>', ...],  # Rounds in order.
                 'rounds': {
@@ -101,10 +102,30 @@ class ProcessMemoryPersistence(BasePersistence):
             raise GameExists(game_id)
 
         self._games[game_id] = {
+            'players': [],
             'cards': cards,
             'rounds_order': [],
             'rounds': {},
         }
+
+    def add_player(self, game_id, player_name: str) -> None:
+        """
+        Register a player in a game.
+
+        :param game_id: game's unique ID
+        :param cards: a list of possible estimations in this game
+        :raise NoSuchGame: if there is no game with such ID
+        :raise PlayerExists: if there is already a player with such name in the game
+        """
+        game = self._get_game(game_id)
+
+        # Players list cannot be a set because that wouldn't serialize to JSON easily.
+        # After all, how many players are we going to have? Especially on deployments using
+        # process memory to keep state.
+        if player_name in game['players']:
+            raise PlayerExists(game_id, player_name)
+
+        game['players'].append(player_name)
 
     def add_round(self, game_id: str, round_name: str) -> None:
         """

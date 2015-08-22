@@ -5,13 +5,13 @@ import pytest
 
 from planningpoker.persistence.exceptions import (
     GameError, RoundError, GameExists, RoundExists, NoSuchGame, NoSuchRound, NoActivePoll,
-    RoundFinalized, IllegalEstimation,
+    RoundFinalized, IllegalEstimation, PlayerExists,
 )
 
 
 @pytest.mark.parametrize('exception_class', [
     GameExists, RoundExists, NoSuchGame, NoSuchRound, NoActivePoll, RoundFinalized,
-    IllegalEstimation
+    IllegalEstimation, PlayerExists
 ])
 def test_exceptions_stringification(exception_class):
     """Check exception __str__ formatting."""
@@ -21,6 +21,8 @@ def test_exceptions_stringification(exception_class):
         args = ['game_id-1231231231', 'Round 40']
     elif issubclass(exception_class, IllegalEstimation):
         args = ['game_id-1231231231', 100]
+    elif issubclass(exception_class, PlayerExists):
+        args = ['game_id-1231231231', 'Jerry']
 
     exception = exception_class(*args)
 

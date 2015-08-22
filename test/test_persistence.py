@@ -4,7 +4,7 @@ import pytest
 from planningpoker.persistence import ProcessMemoryPersistence
 from planningpoker.persistence.exceptions import (
     GameExists, RoundExists, NoSuchGame, NoSuchRound, NoActivePoll, RoundFinalized,
-    IllegalEstimation
+    IllegalEstimation, PlayerExists
 )
 
 GAME_ID = 'game-123456'
@@ -56,9 +56,10 @@ def test_add_game(backend):
 
     assert backend.games_count == 1
     assert backend.serialize_game(game_id) == {
-            'cards': cards,
-            'rounds_order': [],
-            'rounds': {},
+        'players': [],
+        'cards': cards,
+        'rounds_order': [],
+        'rounds': {},
     }
 
     # It's possible to add a game with another ID - with the same cards.
@@ -66,6 +67,26 @@ def test_add_game(backend):
     backend.add_game(another_game_id, cards)
     assert backend.games_count == 2
     assert backend.serialize_game(game_id) == backend.serialize_game(another_game_id)
+
+
+def test_add_player(backend_with_a_game):
+    """Check adding a player to a game and player name collisions."""
+    backend = backend_with_a_game
+    player_name = 'Gertrude'
+    another_player_name = 'Marley'
+
+    with pytest.raises(NoSuchGame):
+        backend.add_player('nonexistent game', 'bob')
+
+    backend.add_player(GAME_ID, player_name)
+
+    with pytest.raises(PlayerExists):
+        backend.add_player(GAME_ID, player_name)
+
+    assert backend.serialize_game(GAME_ID)['players'] == [player_name]
+
+    backend.add_player(GAME_ID, another_player_name)
+    assert backend.serialize_game(GAME_ID)['players'] == [player_name, another_player_name]
 
 
 def test_add_round(backend_with_a_game):

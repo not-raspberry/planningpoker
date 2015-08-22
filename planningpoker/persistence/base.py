@@ -22,6 +22,17 @@ class BasePersistence(abc.ABC):
         """
 
     @abc.abstractmethod
+    def add_player(self, game_id, player_name: str) -> None:
+        """
+        Register a player in a game.
+
+        :param game_id: game's unique ID
+        :param cards: a list of possible estimations in this game
+        :raise NoSuchGame: if there is no game with such ID
+        :raise PlayerExists: if there is already a player with such name in the game
+        """
+
+    @abc.abstractmethod
     def add_round(self, game_id: str, round_name: str) -> None:
         """
         Add next round to a game.

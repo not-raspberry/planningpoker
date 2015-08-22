@@ -104,3 +104,20 @@ class IllegalEstimation(PersistenceError):
         """
         self.game_id = game_id
         self.estimation = estimation
+
+
+class PlayerExists(PersistenceError):
+
+    """Raised when there is a player name conflict in a game."""
+
+    message = "There is already a player with the name {s.player_name} in the game {s.game_id}."
+
+    def __init__(self, game_id: str, player_name: str):
+        """
+        Store the round name and the estimation.
+
+        :param game: game ID
+        :param player_name: conflicting player name
+        """
+        self.game_id = game_id
+        self.player_name = player_name

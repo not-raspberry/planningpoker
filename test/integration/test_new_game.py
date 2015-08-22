@@ -52,9 +52,10 @@ def test_create_new_game_ok(client, cards):
 
     # Empty game is returned.
     assert json['game'] == {
-            'cards': cards,
-            'rounds_order': [],
-            'rounds': {},
+        'players': [],
+        'cards': cards,
+        'rounds_order': [],
+        'rounds': {},
     }
 
     assert client.get('/status').json()['games_count'] == 1
