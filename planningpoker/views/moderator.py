@@ -1,11 +1,13 @@
 """Views for the game moderator."""
 from decimal import Decimal, InvalidOperation
+from urllib.parse import unquote
+
 from aiohttp_session import get_session
 
 from planningpoker.routing import route
 from planningpoker.random_id import get_random_id
 from planningpoker.json_response import json_response
-from planningpoker.persistence.exceptions import RoundExists
+from planningpoker.persistence.exceptions import RoundExists, NoSuchRound, RoundFinalized
 
 
 def coerce_cards(cards: list) -> list:
@@ -73,5 +75,25 @@ def add_round(request, persistence):
         return json_response({'error': 'Round with this name already exists.'}, status=409)
     # No point to catch NoSuchGame because we cannot sensibly handle situation when there is a game
     # in a session but not in the storage. Let's better 500.
+
+    return json_response({'game': persistence.serialize_game(game_id)})
+
+
+@route('POST', '/game/{game_id}/round/{round_name}/new_poll')
+def add_poll(request, persistence):
+    """Add a poll to a round."""
+    game_id = request.match_info['game_id']
+    round_name = unquote(request.match_info['round_name'])
+    user_session = yield from get_session(request)
+
+    if not client_owns_game(game_id, user_session):
+        return json_response({'error': 'The user is not the moderator of this game.'}, status=403)
+
+    try:
+        persistence.add_poll(game_id, round_name)
+    except NoSuchRound:
+        return json_response({'error': 'Round does not exist.'}, status=404)
+    except RoundFinalized:
+        return json_response({'error': 'This round is finalized.'}, status=409)
 
     return json_response({'game': persistence.serialize_game(game_id)})

@@ -13,8 +13,6 @@ SITE_NETLOC = '%s:%s' % (HOST, PORT)
 SITE_ADDRESS = '%s://%s' % (SITE_SCHEME, SITE_NETLOC)
 EXECUTOR_TIMEOUT = 5
 
-GAME_CARDS = [1, 2, 3, 5, 8, 13, '?', 'Break?']
-
 
 class BackendSession(Session):
 
@@ -81,7 +79,13 @@ def client(backend):
 
 
 @pytest.fixture
-def _game(backend):
+def game_cards():
+    """Return cards used by the game created by the ``moderator``."""
+    return [1, 2, 3, 5, 8, 13, '?', 'Break?']
+
+
+@pytest.fixture
+def _game(backend, game_cards):
     """
     Create a game.
 
@@ -90,9 +94,18 @@ def _game(backend):
     :return: game ID and game moderator session
     """
     moderator = client(backend)
-    game = moderator.post('/new_game', data={'cards': GAME_CARDS})
+    game = moderator.post('/new_game', data={'cards': game_cards})
     assert game.ok
     return game.json()['game_id'], moderator
+
+
+@pytest.fixture(params=['round', 'Round One', 'Round łąśðœ→ęóæą'])
+def game_round(moderator, game_id, request):
+    """Add a round to the test game."""
+    round_name = request.param
+    round_request = moderator.post('/game/%s/new_round' % game_id, data={'round_name': round_name})
+    assert round_request.ok
+    return round_name
 
 
 @pytest.fixture
@@ -107,9 +120,3 @@ def game_id(_game):
     """Return the ID of a game created by the ``moderator``."""
     game_id, _ = _game
     return game_id
-
-
-@pytest.fixture
-def game_cards():
-    """Return cards used by the game created by the ``moderator``."""
-    return GAME_CARDS
