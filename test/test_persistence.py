@@ -73,6 +73,10 @@ def test_add_game(backend):
     assert backend.games_count == 2
     assert backend.serialize_game(game_id) == backend.serialize_game(another_game_id)
 
+    assert backend.client_owns_game(game_id, moderator_id)
+    assert backend.client_owns_game(another_game_id, moderator_id)
+    assert not backend.client_owns_game(game_id, '12312-somebody-else')
+
 
 def test_add_player(backend_with_a_game):
     """Check adding a player to a game and player name collisions."""

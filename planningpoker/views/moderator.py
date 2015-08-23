@@ -2,11 +2,12 @@
 from decimal import Decimal, InvalidOperation
 from urllib.parse import unquote
 
-from aiohttp_session import get_session
+from aiohttp_session import Session, get_session
 
 from planningpoker.routing import route
 from planningpoker.random_id import get_random_id
 from planningpoker.json_response import json_response
+from planningpoker.persistence import BasePersistence
 from planningpoker.persistence.exceptions import (
     RoundExists, NoSuchRound, RoundFinalized, NoActivePoll
 )
@@ -26,9 +27,13 @@ def coerce_cards(cards: list) -> list:
     return cast_cards
 
 
-def client_owns_game(game_id, session):
+def client_owns_game(game_id: str, session: Session, persistence: BasePersistence):
     """Return True if the user who owns the session is the moderator of the game."""
-    return game_id in session.get('games', [])
+    try:
+        client_id = session['client_id']
+    except KeyError:
+        return False
+    return persistence.client_owns_game(game_id, client_id)
 
 
 @route('POST', '/new_game')
@@ -53,13 +58,11 @@ def add_game(request, persistence):
     if len(available_cards) < 2:
         return json_response({'error': 'Cannot play with less than 2 cards.'}, status=400)
 
-    game_id = get_random_id()
-    moderator_id = get_random_id()
-    persistence.add_game(game_id, moderator_id, moderator_name, coerce_cards(available_cards))
-
     moderator_session = yield from get_session(request)
-    users_games = moderator_session.setdefault('games', [])
-    users_games.append(game_id)
+    # Get or assign the moderator id:
+    moderator_id = moderator_session.setdefault('client_id', get_random_id())
+    game_id = get_random_id()
+    persistence.add_game(game_id, moderator_id, moderator_name, coerce_cards(available_cards))
 
     return json_response({'game_id': game_id, 'game': persistence.serialize_game(game_id)})
 
@@ -77,7 +80,7 @@ def add_round(request, persistence):
         return json_response({'error': 'The name must not be empty.'}, status=400)
 
     user_session = yield from get_session(request)
-    if not client_owns_game(game_id, user_session):
+    if not client_owns_game(game_id, user_session, persistence):
         return json_response({'error': 'The user is not the moderator of this game.'}, status=403)
 
     try:
@@ -97,7 +100,7 @@ def add_poll(request, persistence):
     round_name = unquote(request.match_info['round_name'])
     user_session = yield from get_session(request)
 
-    if not client_owns_game(game_id, user_session):
+    if not client_owns_game(game_id, user_session, persistence):
         return json_response({'error': 'The user is not the moderator of this game.'}, status=403)
 
     try:
@@ -117,7 +120,7 @@ def finalize_round(request, persistence):
     round_name = unquote(request.match_info['round_name'])
     user_session = yield from get_session(request)
 
-    if not client_owns_game(game_id, user_session):
+    if not client_owns_game(game_id, user_session, persistence):
         return json_response({'error': 'The user is not the moderator of this game.'}, status=403)
 
     try:

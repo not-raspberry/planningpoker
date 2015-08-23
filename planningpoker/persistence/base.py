@@ -21,7 +21,7 @@ class BasePersistence(abc.ABC):
         Register a game.
 
         :param game_id: game's unique ID
-        :param moderator_id: the ID that identifirs the game owner
+        :param moderator_id: the ID that identifies the game owner
         :param moderator_name: the name of the game moderator that the players will see
         :param cards: a list of possible estimations in this game
         :raise GameExists: if a game with such ID already exists
@@ -105,4 +105,14 @@ class BasePersistence(abc.ABC):
 
         :return: a dict loselessly serializable to JSON
         :raise NoSuchGame: if there is no game with such ID
+        """
+
+    @abc.abstractmethod
+    def client_owns_game(self, game_id: str, client_id: str) -> bool:
+        """
+        Check if a client is the moderator of the game.
+
+        :param game_id: unique ID of the game to check for ownership
+        :param moderator_id: ID of the client
+        :return: True if a client is the moderator of the game
         """

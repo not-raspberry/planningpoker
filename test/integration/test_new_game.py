@@ -74,3 +74,17 @@ def test_create_new_game_ok(client, cards):
     }
 
     assert client.get('/status').json()['games_count'] == 1
+
+
+def test_create_2_games(client):
+    """Check if after creating 2 games the user has moderator access to both of them."""
+    game_1 = client.post('/new_game', data={'cards': [1, 3, 5], 'moderator_name': 'Robert'})
+    game_2 = client.post('/new_game', data={'cards': [1, 3, 5, 10, '?'], 'moderator_name': 'Bobby'})
+
+    game_1_id = game_1.json()['game_id']
+    game_2_id = game_2.json()['game_id']
+
+    new_round_game_1 = client.post('/game/%s/new_round' % game_1_id, data={'round_name': 'round'})
+    assert new_round_game_1.status_code == 200
+    new_round_game_2 = client.post('/game/%s/new_round' % game_2_id, data={'round_name': 'round'})
+    assert new_round_game_2.status_code == 200

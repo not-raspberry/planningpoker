@@ -23,7 +23,7 @@ class ProcessMemoryPersistence(BasePersistence):
             '<game-id>': {  # Game dict.
                 'players': {'123fd1d9da37c': 'Beatrice', ...},  # Map of player IDs to player name.
                                                                 # Includes the moderator.
-                'moderator_id': moderator_id,  # ID of the game owner.
+                'moderator_id': 'wqsqw123',  # ID of the game owner.
                 'cards': [1, 3, 5, 8, 13, ...],  # A list of possible estimations.
                 'rounds_order': ['<name-of-the-first-round>', ...],  # Rounds in order.
                 'rounds': {
@@ -97,7 +97,7 @@ class ProcessMemoryPersistence(BasePersistence):
         Insert into the games dict a key of the new game ID with the value of the new game dict.
 
         :param game_id: game's unique ID
-        :param moderator_id: the ID that identifirs the game owner
+        :param moderator_id: the ID that identifies the game owner
         :param moderator_name: the name of the game moderator that the players will see
         :param cards: a list of possible estimations in this game
         :raise GameExists: if a game with such ID already exists
@@ -227,3 +227,14 @@ class ProcessMemoryPersistence(BasePersistence):
             'rounds_order': game['rounds_order'],
             'rounds': game['rounds'],
         }
+
+    def client_owns_game(self, game_id: str, client_id: str) -> bool:
+        """
+        Check if a client is the moderator of the game.
+
+        :param game_id: unique ID of the game to check for ownership
+        :param moderator_id: ID of the client
+        :return: True if a client is the moderator of the game
+        """
+        game = self._get_game(game_id)
+        return game['moderator_id'] == client_id
