@@ -9,6 +9,8 @@ from planningpoker.persistence.exceptions import (
 
 GAME_ID = 'game-123456'
 GAME_CARDS = [1, 2, 3, 5, 8, 13]
+MODERATOR_ID = 'asdfw1'
+MODERATOR_NAME = 'Liz'
 PLAYERS = ['mark', 'lisa', 'kim', 'george']
 ROUND_NAME = 'Round One'
 
@@ -22,7 +24,7 @@ def backend():
 @pytest.fixture
 def backend_with_a_game(backend):
     """Return a persistence backend holding one game."""
-    backend.add_game(GAME_ID, GAME_CARDS)
+    backend.add_game(GAME_ID, MODERATOR_ID, MODERATOR_NAME, GAME_CARDS)
     return backend
 
 
@@ -48,23 +50,26 @@ def test_initial_state(backend):
 def test_add_game(backend):
     """Check adding a game and ID collision detection."""
     game_id = 'aaa'
+    moderator_id = 'bbb'
+    moderator_name = 'Rich'
     cards = [1, 2, 3, 4, 10]
 
-    backend.add_game(game_id, cards)
+    backend.add_game(game_id, moderator_id, moderator_name, cards)
+
     with pytest.raises(GameExists):
-        backend.add_game(game_id, [2, 4, 6, 10])
+        backend.add_game(game_id, 'ddd', 'Frank', [2, 4, 6, 10])
 
     assert backend.games_count == 1
-    assert backend.serialize_game(game_id) == {
-        'players': [],
+    assert backend.serialize_game(game_id) == {  # IDs not revealed.
+        'players': [moderator_name],
         'cards': cards,
         'rounds_order': [],
         'rounds': {},
     }
 
-    # It's possible to add a game with another ID - with the same cards.
-    another_game_id = 'bbb'
-    backend.add_game(another_game_id, cards)
+    # It's possible for the same user to add a another game - with the same cards.
+    another_game_id = 'qqq'
+    backend.add_game(another_game_id, moderator_id, moderator_name, cards)
     assert backend.games_count == 2
     assert backend.serialize_game(game_id) == backend.serialize_game(another_game_id)
 
@@ -73,20 +78,28 @@ def test_add_player(backend_with_a_game):
     """Check adding a player to a game and player name collisions."""
     backend = backend_with_a_game
     player_name = 'Gertrude'
+    player_id = 'id-4411d'
     another_player_name = 'Marley'
+    another_player_id = 'id-123sq'
 
     with pytest.raises(NoSuchGame):
-        backend.add_player('nonexistent game', 'bob')
+        backend.add_player('nonexistent game', 'id-asdasd122', 'bob')
 
-    backend.add_player(GAME_ID, player_name)
+    backend.add_player(GAME_ID, player_id, player_name)
 
     with pytest.raises(PlayerExists):
-        backend.add_player(GAME_ID, player_name)
+        backend.add_player(GAME_ID, player_id, player_name)
 
-    assert backend.serialize_game(GAME_ID)['players'] == [player_name]
+    with pytest.raises(PlayerExists):
+        # PlayerExists is raised also when a player registers again with different name.
+        backend.add_player(GAME_ID, player_id, 'another name')
 
-    backend.add_player(GAME_ID, another_player_name)
-    assert backend.serialize_game(GAME_ID)['players'] == [player_name, another_player_name]
+    players = backend.serialize_game(GAME_ID)['players']
+    assert sorted(players) == sorted([MODERATOR_NAME, player_name])
+
+    backend.add_player(GAME_ID, another_player_id, another_player_name)
+    more_players = backend.serialize_game(GAME_ID)['players']
+    assert sorted(more_players) == sorted([MODERATOR_NAME, player_name, another_player_name])
 
 
 def test_add_round(backend_with_a_game):

@@ -4,7 +4,11 @@ import abc
 
 class BasePersistence(abc.ABC):
 
-    """Base persistence backend."""
+    """
+    Base persistence backend.
+
+    For reference implementation see ``planningpoker.persistence.memory.ProcessMemoryPersistence``.
+    """
 
     @property
     @abc.abstractmethod
@@ -12,23 +16,26 @@ class BasePersistence(abc.ABC):
         """Return games count."""
 
     @abc.abstractmethod
-    def add_game(self, game_id, cards: list) -> None:
+    def add_game(self, game_id: str, moderator_id: str, moderator_name: str, cards: list) -> None:
         """
         Register a game.
 
         :param game_id: game's unique ID
+        :param moderator_id: the ID that identifirs the game owner
+        :param moderator_name: the name of the game moderator that the players will see
         :param cards: a list of possible estimations in this game
         :raise GameExists: if a game with such ID already exists
         """
 
     @abc.abstractmethod
-    def add_player(self, game_id, player_name: str) -> None:
+    def add_player(self, game_id, player_id: str, player_name: str) -> None:
         """
         Register a player in a game.
 
-        :param game_id: game's unique ID
-        :param cards: a list of possible estimations in this game
-        :raise NoSuchGame: if there is no game with such ID
+        :param game_id: game's unique ID to add a player to
+        :param player_id: player's unique ID
+        :param player_name: player's name to use in this game
+        :raise NoSuchGame: if there is no game with given ID
         :raise PlayerExists: if there is already a player with such name in the game
         """
 
@@ -91,7 +98,10 @@ class BasePersistence(abc.ABC):
     @abc.abstractmethod
     def serialize_game(self, game_id: str) -> dict:
         """
-        Fetch and serialize all game's data to a dict.
+        Fetch and serialize all game's public data to a dict.
+
+        .. warning ::
+            Do not disclose non-public data (like player IDs).
 
         :return: a dict loselessly serializable to JSON
         :raise NoSuchGame: if there is no game with such ID

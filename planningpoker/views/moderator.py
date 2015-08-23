@@ -38,15 +38,24 @@ def add_game(request, persistence):
 
     The user will become the moderator of the game.
     """
+    yield from request.post()
+
     try:
-        available_cards = (yield from request.post()).getall('cards')
+        available_cards = request.POST.getall('cards')
     except KeyError:
         return json_response({'error': 'No card set provided.'}, status=400)
+
+    try:
+        moderator_name = request.POST['moderator_name']
+    except KeyError:
+        return json_response({'error': 'Moderator name not provided.'}, status=400)
+
     if len(available_cards) < 2:
         return json_response({'error': 'Cannot play with less than 2 cards.'}, status=400)
 
     game_id = get_random_id()
-    persistence.add_game(game_id, coerce_cards(available_cards))
+    moderator_id = get_random_id()
+    persistence.add_game(game_id, moderator_id, moderator_name, coerce_cards(available_cards))
 
     moderator_session = yield from get_session(request)
     users_games = moderator_session.setdefault('games', [])

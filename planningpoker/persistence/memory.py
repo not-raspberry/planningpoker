@@ -21,7 +21,9 @@ class ProcessMemoryPersistence(BasePersistence):
     Schema:
         self._games = {
             '<game-id>': {  # Game dict.
-                'players': ['Beatrice', ...],  # List of players names.
+                'players': {'123fd1d9da37c': 'Beatrice', ...},  # Map of player IDs to player name.
+                                                                # Includes the moderator.
+                'moderator_id': moderator_id,  # ID of the game owner.
                 'cards': [1, 3, 5, 8, 13, ...],  # A list of possible estimations.
                 'rounds_order': ['<name-of-the-first-round>', ...],  # Rounds in order.
                 'rounds': {
@@ -88,13 +90,15 @@ class ProcessMemoryPersistence(BasePersistence):
         """Return games count."""
         return len(self._games)
 
-    def add_game(self, game_id, cards: list) -> None:
+    def add_game(self, game_id: str, moderator_id: str, moderator_name: str, cards: list) -> None:
         """
         Register a game.
 
         Insert into the games dict a key of the new game ID with the value of the new game dict.
 
         :param game_id: game's unique ID
+        :param moderator_id: the ID that identifirs the game owner
+        :param moderator_name: the name of the game moderator that the players will see
         :param cards: a list of possible estimations in this game
         :raise GameExists: if a game with such ID already exists
         """
@@ -102,19 +106,21 @@ class ProcessMemoryPersistence(BasePersistence):
             raise GameExists(game_id)
 
         self._games[game_id] = {
-            'players': [],
+            'players': {moderator_id: moderator_name},
+            'moderator_id': moderator_id,
             'cards': cards,
             'rounds_order': [],
             'rounds': {},
         }
 
-    def add_player(self, game_id, player_name: str) -> None:
+    def add_player(self, game_id, player_id: str, player_name: str) -> None:
         """
         Register a player in a game.
 
-        :param game_id: game's unique ID
-        :param cards: a list of possible estimations in this game
-        :raise NoSuchGame: if there is no game with such ID
+        :param game_id: game's unique ID to add a player to
+        :param player_id: player's unique ID
+        :param player_name: player's name to use in this game
+        :raise NoSuchGame: if there is no game with given ID
         :raise PlayerExists: if there is already a player with such name in the game
         """
         game = self._get_game(game_id)
@@ -122,10 +128,10 @@ class ProcessMemoryPersistence(BasePersistence):
         # Players list cannot be a set because that wouldn't serialize to JSON easily.
         # After all, how many players are we going to have? Especially on deployments using
         # process memory to keep state.
-        if player_name in game['players']:
+        if player_id in game['players']:
             raise PlayerExists(game_id, player_name)
 
-        game['players'].append(player_name)
+        game['players'][player_id] = player_name
 
     def add_round(self, game_id: str, round_name: str) -> None:
         """
@@ -214,4 +220,10 @@ class ProcessMemoryPersistence(BasePersistence):
         :raise NoSuchGame: if there is no game with such ID
         :return: a dict loselessly serializable to JSON
         """
-        return self._get_game(game_id)
+        game = self._get_game(game_id)
+        return {
+            'players': list(game['players'].values()),
+            'cards': game['cards'],
+            'rounds_order': game['rounds_order'],
+            'rounds': game['rounds'],
+        }

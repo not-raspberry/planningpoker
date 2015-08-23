@@ -94,7 +94,10 @@ def _game(backend, game_cards):
     :return: game ID and game moderator session
     """
     moderator = client(backend)
-    game = moderator.post('/new_game', data={'cards': game_cards})
+    game = moderator.post('/new_game', data={
+        'cards': game_cards,
+        'moderator_name': 'Hannah',
+    })
     assert game.ok
     return game.json()['game_id'], moderator
 
