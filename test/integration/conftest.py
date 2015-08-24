@@ -71,17 +71,29 @@ def backend(request):
     request.addfinalizer(executor.stop)
 
 
+def make_client() -> BackendSession:
+    """Return a client session, not owning any game nor registered as a player."""
+    return BackendSession(SITE_SCHEME, SITE_NETLOC)
+
+
+def make_player(game_id: str, player_name: str) -> BackendSession:
+    """Create a backend session that belongs to a game."""
+    player = make_client()
+    join_game = player.post('/game/%s/join' % game_id, data={'name': player_name})
+    assert join_game.ok
+    return player
+
+
 @pytest.fixture
 def client(backend):
-    """Return a client session."""
-    session = BackendSession(SITE_SCHEME, SITE_NETLOC)
-    return session
+    """Inject ``backend`` dependency and delegate to ``make_client``."""
+    return make_client()
 
 
 @pytest.fixture
 def another_client(backend):
-    """Return a client session with separate identity to the ``client``."""
-    return client(backend)
+    """Return a client session with separate identity from the ``client``."""
+    return make_client()
 
 
 @pytest.fixture
@@ -97,11 +109,9 @@ def moderator_name():
 
 
 @pytest.fixture
-def _game(backend, game_cards, moderator_name):
+def game(backend, game_cards, moderator_name):
     """
     Create a game.
-
-    Not to be used in tests - use ``moderator`` and ``game_id`` fixtures.
 
     :return: game ID and game moderator session
     """
@@ -112,6 +122,13 @@ def _game(backend, game_cards, moderator_name):
     })
     assert game.ok
     return game.json()['game_id'], moderator
+
+
+@pytest.fixture
+def game_id(game):
+    """Return the ID of a game created by the ``moderator``."""
+    game_id, _ = game
+    return game_id
 
 
 @pytest.fixture(params=['round', 'Round One', 'Round łąśðœ→ęóæą'])
@@ -131,14 +148,19 @@ def game_poll(moderator, game_round, game_id, request):
 
 
 @pytest.fixture
-def moderator(_game):
+def moderator(game):
     """Return a game moderator session."""
-    _, moderator = _game
+    _, moderator = game
     return moderator
 
 
 @pytest.fixture
-def game_id(_game):
-    """Return the ID of a game created by the ``moderator``."""
-    game_id, _ = _game
-    return game_id
+def player_name():
+    """Return player name."""
+    return 'Martin'
+
+
+@pytest.fixture
+def player(game, game_id, player_name):
+    """Return a client registered within a game."""
+    return make_player(game_id, player_name)

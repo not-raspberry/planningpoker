@@ -47,7 +47,7 @@ class RoundError(PersistenceError):
         self.round_name = round_name
 
 
-class PlayerError(PersistenceError):
+class PlayerStateError(PersistenceError):
 
     """Base for player errors."""
 
@@ -111,7 +111,7 @@ class IllegalEstimation(PersistenceError):
 
     """Raised when the estimation a player votes for is not allowed in this game."""
 
-    message = 'The estimation {s.estimation} is not available in the game {s.game_id}.'
+    message = 'The estimation {s.estimation!r} is not available in the game {s.game_id}.'
 
     def __init__(self, game_id: str, estimation: str):
         """
@@ -124,14 +124,31 @@ class IllegalEstimation(PersistenceError):
         self.estimation = estimation
 
 
-class PlayerNameTaken(PlayerError):
+class PlayerNotInGame(PersistenceError):
+
+    """Raised when there should be a player with given ID in the game but isn't."""
+
+    message = 'There is no player with ID {s.player_id} in the game {s.game_id}.'
+
+    def __init__(self, game_id: str, player_id: str):
+        """
+        Store the round name and the estimation.
+
+        :param game: game ID
+        :param estimation: choosen invalid estimation
+        """
+        self.game_id = game_id
+        self.player_id = player_id
+
+
+class PlayerNameTaken(PlayerStateError):
 
     """Raised when there is a player name conflict in a game."""
 
-    message = "There is already a player with the name {s.player_name} in the game {s.game_id}."
+    message = 'There is already a player with the name {s.player_name} in the game {s.game_id}.'
 
 
-class PlayerAlreadyRegistered(PlayerError):
+class PlayerAlreadyRegistered(PlayerStateError):
 
     """Raised when a player is already registered in a game."""
 

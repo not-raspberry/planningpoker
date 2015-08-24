@@ -2,7 +2,7 @@
 from planningpoker.persistence.base import BasePersistence
 from planningpoker.persistence.exceptions import (
     GameExists, RoundExists, NoSuchGame, NoSuchRound, NoActivePoll, RoundFinalized,
-    IllegalEstimation, PlayerNameTaken, PlayerAlreadyRegistered,
+    IllegalEstimation, PlayerNameTaken, PlayerAlreadyRegistered, PlayerNotInGame,
 )
 
 
@@ -188,7 +188,7 @@ class ProcessMemoryPersistence(BasePersistence):
             raise NoActivePoll(game_id, round_name)
         round['finalized'] = True
 
-    def cast_vote(self, game_id: str, round_name: str, voter_name: str, estimation: str) -> None:
+    def cast_vote(self, game_id: str, round_name: str, voter_id: str, estimation: str) -> None:
         """
         Cast a vote for the current poll.
 
@@ -196,13 +196,14 @@ class ProcessMemoryPersistence(BasePersistence):
 
         :param game_id: existing game's unique id
         :param round_name: user-provided name of the new round
-        :param voter_name: name of the voter
+        :param voter_id: ID of the voter (not to be disclosed)
         :param estimation: the estimation the voter votes for
         :raise NoSuchGame: if there is no game with such ID
         :raise NoSuchRound: if there is no round with such name within the game
         :raise NoActivePoll: if there no active poll in the round
         :raise RoundFinalized: if the round has already been finalized
         :raise IllegalEstimation: if the voter voted for a card that doesn't take a part in the game
+        :raise PlayerNotInGame: if the voter ID does not map to any player
         """
         round = self._get_round(game_id, round_name, ensure_active=True)
         try:
@@ -213,6 +214,11 @@ class ProcessMemoryPersistence(BasePersistence):
         game = self._get_game(game_id)
         if estimation not in game['cards']:
             raise IllegalEstimation(game_id, estimation)
+
+        try:
+            voter_name = game['players'][voter_id]
+        except KeyError:
+            raise PlayerNotInGame(game_id, voter_id)
 
         latest_poll[voter_name] = estimation
 

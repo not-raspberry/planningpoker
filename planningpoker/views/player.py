@@ -3,10 +3,12 @@ from aiohttp_session import get_session
 
 from planningpoker.routing import route
 from planningpoker.json_response import json_response
+from planningpoker.cards import coerce_card
 from planningpoker.persistence.exceptions import (
-    NoSuchGame, PlayerNameTaken, PlayerAlreadyRegistered,
+    NoSuchGame, NoSuchRound, RoundFinalized, PlayerNameTaken, PlayerAlreadyRegistered,
+    PlayerNotInGame, IllegalEstimation
 )
-from planningpoker.views.identity import get_or_assign_id
+from planningpoker.views.identity import get_or_assign_id, get_id
 
 
 @route('POST', '/game/{game_id}/join')
@@ -40,4 +42,24 @@ def join_game(request, persistence):
 
 @route('POST', '/game/{game_id}/round/{round_name}/vote')
 def cast_vote(request, persistence):
-    """Vote in a poll."""
+    """Vote in the active poll in the round."""
+    game_id = request.match_info['game_id']
+    round_name = request.match_info['round_name']
+    player_session = yield from get_session(request)
+    player_id = get_id(player_session)
+    vote = coerce_card((yield from request.post())['vote'])
+
+    try:
+        persistence.cast_vote(game_id, round_name, player_id, vote)
+    except NoSuchGame:
+        return json_response({'error': 'There is no such game.'}, status=404)
+    except NoSuchRound:
+        return json_response({'error': 'There is no such round in the game.'}, status=404)
+    except RoundFinalized:
+        return json_response({'error': 'The round is finalized.'}, status=409)
+    except IllegalEstimation:
+        return json_response({'error': 'The estimation voted for is invalid.'}, status=400)
+    except PlayerNotInGame:
+        return json_response({'error': 'Cannot vote until the name is provided.'}, status=401)
+
+    return json_response({'game': persistence.serialize_game(game_id)})
