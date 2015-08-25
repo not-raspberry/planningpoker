@@ -1,6 +1,5 @@
 """Views for the game moderator."""
 from decimal import Decimal, InvalidOperation
-from urllib.parse import unquote
 
 from aiohttp_session import get_session
 
@@ -88,7 +87,7 @@ def add_round(request, persistence):
 def add_poll(request, persistence):
     """Add a poll to a round."""
     game_id = request.match_info['game_id']
-    round_name = unquote(request.match_info['round_name'])
+    round_name = request.match_info['round_name']
     user_session = yield from get_session(request)
 
     if not client_owns_game(game_id, user_session, persistence):
@@ -108,7 +107,7 @@ def add_poll(request, persistence):
 def finalize_round(request, persistence):
     """Finalize an owned round."""
     game_id = request.match_info['game_id']
-    round_name = unquote(request.match_info['round_name'])
+    round_name = request.match_info['round_name']
     user_session = yield from get_session(request)
 
     if not client_owns_game(game_id, user_session, persistence):
