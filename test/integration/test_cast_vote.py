@@ -22,6 +22,9 @@ def test_cast_vote(game_id, game_round, game_poll, game_cards,
 
 def test_cast_vote_validation(game_id, game_round, game_poll, game_cards, player, player_name):
     """Feed the Cast vote resource with invelid requests."""
+    no_vote = player.post('/game/%s/round/%s/vote' % (game_id, game_round))
+    assert no_vote.status_code == 400
+
     vote = game_cards[0]
     invalid_game_id = player.post('/game/123-NO-SUCH-GAME/round/%s/vote' % game_round,
                                   data={'vote': vote})

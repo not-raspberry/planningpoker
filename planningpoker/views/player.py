@@ -47,7 +47,11 @@ def cast_vote(request, persistence):
     round_name = request.match_info['round_name']
     player_session = yield from get_session(request)
     player_id = get_id(player_session)
-    vote = coerce_card((yield from request.post())['vote'])
+    try:
+        vote_str = (yield from request.post())['vote']
+    except KeyError:
+        return json_response({'error': 'Must provide an estimation.'}, status=400)
+    vote = coerce_card(vote_str)
 
     try:
         persistence.cast_vote(game_id, round_name, player_id, vote)
