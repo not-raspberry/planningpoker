@@ -2,12 +2,13 @@
 from urllib.parse import urlencode, urlunsplit
 
 import pytest
+import port_for
 from requests import Session
 from mirakuru import HTTPExecutor
 
-from planningpoker.settings import HOST, PORT
 
-
+HOST = '127.0.0.1'
+PORT = port_for.select_random()
 SITE_SCHEME = 'http'
 SITE_NETLOC = '%s:%s' % (HOST, PORT)
 SITE_ADDRESS = '%s://%s' % (SITE_SCHEME, SITE_NETLOC)
@@ -63,7 +64,12 @@ class BackendSession(Session):
 def backend(request):
     """Run application backend."""
     executor = HTTPExecutor(
-        ['./planningpoker/app.py'],
+        [
+            'planningpoker',
+            '--host', '127.0.0.1',
+            '--port', str(PORT),
+            '--cookie-secret-key', 'a' * 16
+        ],
         SITE_ADDRESS + '/status',
         timeout=EXECUTOR_TIMEOUT
     )

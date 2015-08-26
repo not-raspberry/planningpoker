@@ -14,6 +14,7 @@ REQUIREMENTS = [
     'aiohttp-session==0.1.2',
     'aiohttp_session[pycrypto]',
     'simplejson==3.8.0',  # A JSON library that does not fear Decimals.
+    'click==5.1',
 ]
 
 TEST_REQUIREMENTS = [
@@ -21,6 +22,7 @@ TEST_REQUIREMENTS = [
     'pytest==2.7.2',
     'requests==2.7.0',  # A synchronous HTTP client to use in tests.
     'mirakuru==0.5.0',  # Process executor.
+    'port-for==0.3.1',
 ]
 
 setup(
@@ -49,5 +51,7 @@ setup(
     tests_require=TEST_REQUIREMENTS,
     extras_require={'tests': TEST_REQUIREMENTS},
     cmdclass={},
-    entry_points={}
+    entry_points={
+        'console_scripts': 'planningpoker=planningpoker.app:cli_entry'
+    },
 )

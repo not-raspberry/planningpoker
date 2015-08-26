@@ -1,0 +1,6 @@
+{
+    "host": "127.0.0.1",
+    "port": 8000,
+    "cookie_secret_key": "You should really make this secret. And multiple of 16. Use /dev/random.        "
+}
+
