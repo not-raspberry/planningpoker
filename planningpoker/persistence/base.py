@@ -79,7 +79,7 @@ class BasePersistence(abc.ABC):
         """
 
     @abc.abstractmethod
-    def cast_vote(self, game_id: str, round_name: str, voter_name: str, estimation: str) -> None:
+    def cast_vote(self, game_id: str, round_name: str, voter_id: str, estimation: str) -> None:
         """
         Cast a vote for the current poll.
 
@@ -94,6 +94,7 @@ class BasePersistence(abc.ABC):
         :raise NoActivePoll: if there no active poll in the round
         :raise RoundFinalized: if the round has already been finalized
         :raise IllegalEstimation: if the voter voted for a card that doesn't take a part in the game
+        :raise PlayerNotInGame: if the voter ID does not map to any player
         """
 
     @abc.abstractmethod
@@ -114,6 +115,6 @@ class BasePersistence(abc.ABC):
         Check if a client is the moderator of the game.
 
         :param game_id: unique ID of the game to check for ownership
-        :param moderator_id: ID of the client
+        :param client_id: ID of the client
         :return: True if a client is the moderator of the game
         """

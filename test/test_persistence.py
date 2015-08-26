@@ -4,14 +4,13 @@ import pytest
 from planningpoker.persistence import ProcessMemoryPersistence
 from planningpoker.persistence.exceptions import (
     GameExists, RoundExists, NoSuchGame, NoSuchRound, NoActivePoll, RoundFinalized,
-    IllegalEstimation, PlayerNameTaken, PlayerAlreadyRegistered,
+    IllegalEstimation, PlayerNameTaken, PlayerAlreadyRegistered, PlayerNotInGame,
 )
 
 GAME_ID = 'game-123456'
 GAME_CARDS = [1, 2, 3, 5, 8, 13]
 MODERATOR_ID = 'asdfw1'
 MODERATOR_NAME = 'Liz'
-PLAYERS = ['mark', 'lisa', 'kim', 'george']
 ROUND_NAME = 'Round One'
 
 
@@ -196,8 +195,18 @@ def test_finalize_round(backend_with_a_round):
 
 
 def test_cast_vote(backend_with_a_round):
-    """Test vote casting."""
+    """
+    Test vote casting.
+
+    Check if registered players can cast votes by providing their IDs and in the voting results
+    their names are to be seen rather than the IDs.
+    """
+    players_names = ['mark', 'lisa', 'kim', 'george']
+    players_ids = range(len(players_names))
     backend = backend_with_a_round
+
+    for player_id, player_name in zip(players_ids, players_names):
+        backend.add_player(GAME_ID, player_id, player_name)
 
     with pytest.raises(NoSuchGame):
         backend.cast_vote('nonexistent_game', ROUND_NAME, 'bob', GAME_CARDS[0])
@@ -215,25 +224,31 @@ def test_cast_vote(backend_with_a_round):
         # There is a poll but we've choosen a wrong card
         backend.cast_vote(GAME_ID, ROUND_NAME, 'bob', 'no such card')
 
-    player_to_vote = dict(zip(PLAYERS, GAME_CARDS))
+    player_id_to_vote = dict(zip(players_ids, GAME_CARDS))
+    player_name_to_vote = dict(zip(players_names, GAME_CARDS))
 
-    for player, vote in player_to_vote.items():
+    for player, vote in player_id_to_vote.items():
         backend.cast_vote(GAME_ID, ROUND_NAME, player, vote)
 
     round = backend.serialize_game(GAME_ID)['rounds'][ROUND_NAME]
     assert round['finalized'] is False
-    assert round['polls'] == [player_to_vote]
+    assert round['polls'] == [player_name_to_vote]
 
     # A player is able to change the vote:
-    backend.cast_vote(GAME_ID, ROUND_NAME, PLAYERS[0], GAME_CARDS[3])
-    player_to_vote[PLAYERS[0]] = GAME_CARDS[3]
+    changed_vote = GAME_CARDS[3]
+    player_changing_vote_index = 2
+    player_changing_vote_id = players_ids[player_changing_vote_index]
+    player_changing_vote_name = players_names[player_changing_vote_index]
+    backend.cast_vote(GAME_ID, ROUND_NAME, player_changing_vote_id, changed_vote)
+    player_name_to_vote[player_changing_vote_name] = changed_vote
+    player_id_to_vote[player_changing_vote_id] = changed_vote
 
-    assert backend.serialize_game(GAME_ID)['rounds'][ROUND_NAME]['polls'] == [player_to_vote]
+    assert backend.serialize_game(GAME_ID)['rounds'][ROUND_NAME]['polls'] == [player_name_to_vote]
 
     # Recasting the same vote should not change anything.
-    for player, vote in player_to_vote.items():
+    for player, vote in player_id_to_vote.items():
         backend.cast_vote(GAME_ID, ROUND_NAME, player, vote)
-    assert backend.serialize_game(GAME_ID)['rounds'][ROUND_NAME]['polls'] == [player_to_vote]
+    assert backend.serialize_game(GAME_ID)['rounds'][ROUND_NAME]['polls'] == [player_name_to_vote]
 
 
 def test_cast_vote_round_finalized(backend_with_a_poll):
@@ -247,17 +262,26 @@ def test_cast_vote_round_finalized(backend_with_a_poll):
 def test_cast_vote_multiple_polls(backend_with_a_poll):
     """Test if the votes always go to the last poll."""
     backend = backend_with_a_poll
-    player = 'JJ'
+    player_name = 'JJ'
+    player_id = '1212'
     vote = GAME_CARDS[3]
 
-    backend.cast_vote(GAME_ID, ROUND_NAME, player, vote)
-    assert backend.serialize_game(GAME_ID)['rounds'][ROUND_NAME]['polls'] == [{player: vote}]
+    backend.add_player(GAME_ID, player_id, player_name)
+
+    backend.cast_vote(GAME_ID, ROUND_NAME, player_id, vote)
+    assert backend.serialize_game(GAME_ID)['rounds'][ROUND_NAME]['polls'] == [{player_name: vote}]
 
     backend.add_poll(GAME_ID, ROUND_NAME)
     second_vote = GAME_CARDS[5]
-    backend.cast_vote(GAME_ID, ROUND_NAME, player, second_vote)
+    backend.cast_vote(GAME_ID, ROUND_NAME, player_id, second_vote)
 
     assert backend.serialize_game(GAME_ID)['rounds'][ROUND_NAME]['polls'] == [
-        {player: vote},
-        {player: second_vote},
+        {player_name: vote},
+        {player_name: second_vote},
     ]
+
+
+def test_cast_vote_unregistrered(backend_with_a_poll):
+    """Test if casting a vote by an unregistered player causes an exception to be raised."""
+    with pytest.raises(PlayerNotInGame):
+        backend_with_a_poll.cast_vote(GAME_ID, ROUND_NAME, '123123-no-such-player', GAME_CARDS[2])

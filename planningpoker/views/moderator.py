@@ -1,29 +1,14 @@
 """Views for the game moderator."""
-from decimal import Decimal, InvalidOperation
-
 from aiohttp_session import get_session
 
 from planningpoker.routing import route
 from planningpoker.random_id import get_random_id
 from planningpoker.json_response import json_response
+from planningpoker.cards import coerce_cards
 from planningpoker.persistence.exceptions import (
     RoundExists, NoSuchRound, RoundFinalized, NoActivePoll
 )
 from planningpoker.views.identity import client_owns_game, get_or_assign_id
-
-
-def coerce_cards(cards: list) -> list:
-    """Cast strings in a list to Decimal if they are numeric, otherwise leave them as strings."""
-    cast_cards = []
-    for card in cards:
-        try:
-            cast_card = Decimal(card)
-        except InvalidOperation:
-            cast_card = card
-
-        cast_cards.append(cast_card)
-
-    return cast_cards
 
 
 @route('POST', '/new_game')
