@@ -9,6 +9,8 @@ Status
 ------
 
 .. image:: https://travis-ci.org/not-raspberry/planningpoker.svg?branch=master
+    :target: https://travis-ci.org/not-raspberry/planningpoker
+
 
 Intended features
 =================
