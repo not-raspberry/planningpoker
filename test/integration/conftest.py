@@ -3,6 +3,7 @@ from urllib.parse import urlencode, urlunsplit
 
 import pytest
 import port_for
+from cryptography.fernet import Fernet
 from requests import Session
 from mirakuru import HTTPExecutor
 
@@ -68,7 +69,7 @@ def backend(request):
             'planningpoker',
             '--host', '127.0.0.1',
             '--port', str(PORT),
-            '--cookie-secret-key', 'a' * 16
+            '--cookie-secret-key', Fernet.generate_key().decode()
         ],
         SITE_ADDRESS + '/status',
         timeout=EXECUTOR_TIMEOUT

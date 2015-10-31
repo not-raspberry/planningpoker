@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Web app initialization."""
 import sys
+import os
+import base64
 from functools import wraps
 
 import click
@@ -35,6 +37,23 @@ def init(loop, host: str, port: int, secret_key: str, persistence: BasePersisten
         app.router.add_route(
             method, path, add_persistence_to_handler(handler), name=name)
 
+    static_dir = os.path.join(os.path.dirname(__file__), 'static/')
+    app.router.add_static('/static', static_dir, name='Static')
+
+    def make_static_resource(static_file_path: str):
+        """
+        Create a handler that resolves to static file.
+
+        :param static_file_path: a path to the static file, relative to the static files directory
+        """
+        @asyncio.coroutine
+        def static_view(request):
+            request.match_info['filename'] = static_file_path
+            return app.router['Static'].handle(request)
+        return static_view
+
+    app.router.add_route('GET', '/', make_static_resource('html/index.html'))
+
     srv = yield from loop.create_server(app.make_handler(), host, port)
     print('HTTP server started at %s:%s' % (host, port), file=sys.stderr)
     return srv
@@ -44,7 +63,8 @@ def init(loop, host: str, port: int, secret_key: str, persistence: BasePersisten
 @click.option('-H', '--host', type=str, help='Host for the web app to bind to.')
 @click.option('-p', '--port', type=int, help='Port for the web app to listen on.')
 @click.option('-k', '--cookie-secret-key', type=str,
-              help='Key to encrypt the cookies with. Key length must be a multiple of 16.')
+              help='Fernet key to encrypt cookies with. Must be 32 url-safe base64-encoded '
+                   'bytes. Use `cryptography.fernet.Fernet.generate_key()` to generate.')
 @click.option('-c', '--config', 'config_file', type=click.File('r'),
               help='Config file to fall back to if options are not provided.')
 def cli_entry(host, port, cookie_secret_key, config_file):
@@ -76,10 +96,12 @@ def cli_entry(host, port, cookie_secret_key, config_file):
         print('Key not found in config: %r' % key, file=sys.stderr)
         exit(1)
 
+    cookie_secret_bytes = base64.urlsafe_b64decode(cookie_secret_key.encode())
+
     loop = asyncio.get_event_loop()
     loop.run_until_complete(init(
         loop,
-        host, port, cookie_secret_key,
+        host, port, cookie_secret_bytes,
         persistence=ProcessMemoryPersistence()
     ))
     loop.run_forever()
