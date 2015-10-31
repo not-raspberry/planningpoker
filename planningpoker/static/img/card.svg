@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<svg width="86" height="121" xmlns="http://www.w3.org/2000/svg" shape-rendering="geometricPrecision">
+    <title>The '5' Card</title>
+    <rect x="3" y="3" height="115" width="80" rx="20" stroke-width="4.5" fill="#000" stroke="#fff" />
+    <text x="17" y="92.5" font-family="Helvetica, Arial, sans-serif" font-weight="bold" font-size="94" fill="#000" stroke="#fff" stroke-width="3">5</text>
+</svg>

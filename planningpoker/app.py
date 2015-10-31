@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Web app initialization."""
 import sys
+import os
 from functools import wraps
 
 import click
@@ -34,6 +35,23 @@ def init(loop, host: str, port: int, secret_key: str, persistence: BasePersisten
 
         app.router.add_route(
             method, path, add_persistence_to_handler(handler), name=name)
+
+    static_dir = os.path.join(os.path.dirname(__file__), 'static/')
+    app.router.add_static('/static', static_dir, name='Static')
+
+    def make_static_resource(static_file_path: str):
+        """
+        Create a handler that resolves to static file.
+
+        :param static_file_path: a path to the static file, relative to the static files directory
+        """
+        @asyncio.coroutine
+        def static_view(request):
+            request.match_info['filename'] = static_file_path
+            return app.router['Static'].handle(request)
+        return static_view
+
+    app.router.add_route('GET', '/', make_static_resource('html/index.html'))
 
     srv = yield from loop.create_server(app.make_handler(), host, port)
     print('HTTP server started at %s:%s' % (host, port), file=sys.stderr)
