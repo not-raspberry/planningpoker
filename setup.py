@@ -11,8 +11,7 @@ with open(os.path.join(here, 'README.rst')) as f:
 
 REQUIREMENTS = [
     'aiohttp==0.17.0',
-    'aiohttp-session==0.1.2',
-    'aiohttp_session[pycrypto]',
+    'aiohttp_session[secure]==0.2.0',
     'simplejson==3.8.0',  # A JSON library that does not fear Decimals.
     'click==5.1',
 ]
