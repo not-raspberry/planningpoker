@@ -11,11 +11,6 @@ routes = {}
 method_paths = set()
 
 
-def prettify_view_name(view: types.FunctionType) -> str:
-    """Return a pretty name automatically generated from the view."""
-    return view.__name__.replace('_', ' ').capitalize()
-
-
 def route(method, path, name: str = None, *,
           routes_dict=routes, method_path_set=method_paths) -> types.FunctionType:
     """Return a decorator to register a view."""
@@ -29,7 +24,7 @@ def route(method, path, name: str = None, *,
         """
         nonlocal name
         if name is None:
-            name = prettify_view_name(handler_fn)
+            name = handler_fn.__name__
 
         if name in routes_dict:
             raise ValueError('Route with name %r exists' % name)

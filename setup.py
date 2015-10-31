@@ -9,18 +9,20 @@ here = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(here, 'README.rst')) as f:
     README = f.read()
 
+# Requirements specified up to the minor version to allow bugfixes to be automatically applied.
 REQUIREMENTS = [
-    'aiohttp==0.17.0',
+    'aiohttp==0.18',
     'aiohttp_session[secure]==0.2.0',
-    'simplejson==3.8.0',  # A JSON library that does not fear Decimals.
+    'simplejson==3.8',  # A JSON library that does not fear Decimals.
     'click==5.1',
 ]
 
+# Versions of test requirements kept exact to avoid broken builds due to API breakage in updates.
 TEST_REQUIREMENTS = [
     'pylama==6.3.4',
-    'pytest==2.7.2',
-    'requests==2.7.0',  # A synchronous HTTP client to use in tests.
-    'mirakuru==0.5.0',  # Process executor.
+    'pytest==2.8.2',
+    'requests==2.8.1',  # A synchronous HTTP client to use in tests.
+    'mirakuru==0.6.1',  # Process executor.
     'port-for==0.3.1',
 ]
 
