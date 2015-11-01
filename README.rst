@@ -1,7 +1,7 @@
 planningpoker
 =============
 
-Planning poker web application - in Python 3.
+Planning poker web application - in Python 3, React.js and ES6.
 
 https://en.wikipedia.org/wiki/Planning_poker
 
@@ -14,7 +14,20 @@ Status
 Running
 -------
 
-See ``planningpoker --help``.
+Compiling JS::
+
+    $ npm install  # Takes looong...
+    $ npm run-script build
+
+For development you might want to do: ``npm run-script watch``.
+
+Python dependencies::
+
+    ./setup.py install
+
+For development you might also want to do: ``pip install -e '.[tests]'``.
+
+For running the backend see ``planningpoker --help``.
 
 Intended features
 =================
