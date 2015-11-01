@@ -7,4 +7,6 @@ install:
 script:
     - pylama
     - py.test -vvvv --showlocals
+    - npm install
+    - npm run-script build
 sudo: false
