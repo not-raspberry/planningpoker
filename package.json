@@ -6,8 +6,8 @@
     "test": "test/js"
   },
   "scripts": {
-      "watch": "echo 'It runs slowly only the first time'; webpack --watch --progress --color",
-      "build": "webpack --progress --color"
+    "watch": "echo 'It runs slowly only the first time'; webpack --watch --progress --color",
+    "build": "webpack --progress --color"
   },
   "repository": {
     "type": "git",
@@ -27,5 +27,9 @@
     "babel-core": "~6.0.14",
     "babel-preset-es2015": "~6.0.14",
     "babel-plugin-transform-react-jsx": "~6.0.14"
+  },
+  "dependencies": {
+    "history": "~1.13.0",
+    "react-router": "~1.0.0"
   }
 }
