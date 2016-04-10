@@ -1,5 +1,5 @@
 module.exports = {
-    entry: './planningpoker/static/js/main.js',
+    entry: './js/main.js',
     output: {
         path: __dirname + '/planningpoker/static',
         filename: 'bundle.js'
