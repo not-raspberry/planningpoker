@@ -52,5 +52,7 @@ System requirements
 
 Currently supporting Python 3.4 and 3.4 only.
 
+Recommended Node.js 4+.
+
 Python 3 header files are required to compile ``cryptography``. See
 http://cryptography.readthedocs.org/en/latest/installation/#building-cryptography-on-linux
