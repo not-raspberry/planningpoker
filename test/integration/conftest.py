@@ -86,7 +86,7 @@ def make_client() -> BackendSession:
 def make_player(game_id: str, player_name: str) -> BackendSession:
     """Create a backend session that belongs to a game."""
     player = make_client()
-    join_game = player.post('/game/%s/join' % game_id, data={'name': player_name})
+    join_game = player.post('/game/%s/join' % game_id, json={'name': player_name})
     assert join_game.ok
     return player
 
@@ -123,7 +123,7 @@ def game(backend, game_cards, moderator_name):
     :return: game ID and game moderator session
     """
     moderator = client(backend)
-    game = moderator.post('/new_game', data={
+    game = moderator.post('/new_game', json={
         'cards': game_cards,
         'moderator_name': moderator_name,
     })
@@ -142,7 +142,7 @@ def game_id(game):
 def game_round(moderator, game_id, request):
     """Add a round to the test game."""
     round_name = request.param
-    round_request = moderator.post('/game/%s/new_round' % game_id, data={'round_name': round_name})
+    round_request = moderator.post('/game/%s/new_round' % game_id, json={'round_name': round_name})
     assert round_request.ok
     return round_name
 

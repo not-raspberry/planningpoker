@@ -1,9 +1,9 @@
-"""Test ``json_response`` helper."""
+"""Test ``planningpoker.json`` helpers."""
 from decimal import Decimal
 
 import pytest
 
-from planningpoker.json_response import json_response
+from planningpoker.json import json_response, loads_or_empty
 
 
 @pytest.mark.parametrize('native_data, resulting_bytes', [
@@ -30,3 +30,20 @@ def test_json_response_argument_passing():
     response = json_response({'food': 'tortilla'}, status=status, reason=reason)
     assert response.status == status
     assert response.reason == reason
+
+
+@pytest.mark.parametrize('text, loaded', [
+    ('', {}),
+    ('{}', {}),
+    ('{', {}),
+    ('a', {}),
+    ('😸', {}),
+    ('ąśðł', {}),
+    ('"😸"', "😸"),
+    ('null', None),
+    ('{"a": 12}', {'a': 12}),
+    ('[]', []),
+])
+def test_loads_or_empty(text, loaded):
+    """Test if ``loads_or_empty`` returns an empty dict for invalid payloads."""
+    assert loads_or_empty(text) == loaded

@@ -3,7 +3,7 @@ from aiohttp_session import get_session
 
 from planningpoker.routing import route
 from planningpoker.random_id import get_random_id
-from planningpoker.json_response import json_response
+from planningpoker.json import json_response, loads_or_empty
 from planningpoker.cards import coerce_cards
 from planningpoker.persistence.exceptions import (
     RoundExists, NoSuchRound, RoundFinalized, NoActivePoll
@@ -18,15 +18,15 @@ def add_game(request, persistence):
 
     The user will become the moderator of the game.
     """
-    yield from request.post()
+    json = yield from request.json(loads=loads_or_empty)
 
     try:
-        available_cards = request.POST.getall('cards')
+        available_cards = json['cards']
     except KeyError:
         return json_response({'error': 'No card set provided.'}, status=400)
 
     try:
-        moderator_name = request.POST['moderator_name']
+        moderator_name = json['moderator_name']
     except KeyError:
         return json_response({'error': 'Moderator name not provided.'}, status=400)
 
@@ -46,8 +46,10 @@ def add_game(request, persistence):
 def add_round(request, persistence):
     """Add a round to the game."""
     game_id = request.match_info['game_id']
+    json = yield from request.json(loads=loads_or_empty)
+
     try:
-        round_name = (yield from request.post())['round_name']
+        round_name = json['round_name']
     except KeyError:
         return json_response({'error': 'Must specify the name.'}, status=400)
 

@@ -2,7 +2,7 @@
 from aiohttp_session import get_session
 
 from planningpoker.routing import route
-from planningpoker.json_response import json_response
+from planningpoker.json import json_response, loads_or_empty
 from planningpoker.cards import coerce_card
 from planningpoker.persistence.exceptions import (
     NoSuchGame, NoSuchRound, RoundFinalized, PlayerNameTaken, PlayerAlreadyRegistered,
@@ -15,8 +15,10 @@ from planningpoker.views.identity import get_or_assign_id, get_id
 def join_game(request, persistence):
     """Join a game and provide a name."""
     game_id = request.match_info['game_id']
+    json = yield from request.json(loads=loads_or_empty)
+
     try:
-        player_name = (yield from request.post())['name']
+        player_name = json['name']
     except KeyError:
         return json_response({'error': 'Must provide a name.'}, status=400)
 
@@ -45,10 +47,12 @@ def cast_vote(request, persistence):
     """Vote in the active poll in the round."""
     game_id = request.match_info['game_id']
     round_name = request.match_info['round_name']
+    json = yield from request.json(loads=loads_or_empty)
     player_session = yield from get_session(request)
     player_id = get_id(player_session)
+
     try:
-        vote_str = (yield from request.post())['vote']
+        vote_str = json['vote']
     except KeyError:
         return json_response({'error': 'Must provide an estimation.'}, status=400)
     vote = coerce_card(vote_str)

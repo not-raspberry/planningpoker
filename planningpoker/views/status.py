@@ -2,7 +2,7 @@
 from aiohttp import web
 
 from planningpoker.routing import route
-from planningpoker.json_response import json_response
+from planningpoker.json import json_response
 
 
 @route('HEAD', '/status')
