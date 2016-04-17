@@ -3,8 +3,8 @@ import { Button } from 'react-bootstrap';
 import { LinkContainer } from 'react-router-bootstrap';
 
 
-export default class Welcome extends React.Component {
-    render() {
+const Welcome = React.createClass({
+    render: function() {
         return (
         <div>
             <h1 className="cover-heading">Play planning poker with your team.</h1>
@@ -19,4 +19,6 @@ export default class Welcome extends React.Component {
         </div>
         );
     }
-}
+});
+
+export default Welcome;
