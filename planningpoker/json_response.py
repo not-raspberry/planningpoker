@@ -1,17 +1,22 @@
 """JSON response helper."""
+from decimal import Decimal
+from functools import partial
+
+from aiohttp.web import json_response as original_json_response
 import simplejson
 
-from aiohttp.web import Response
 
-
-def json_response(response_data: dict, *args, **kwargs) -> Response:
+def dump_to_json(data: (dict, list, int, float, Decimal, str)) -> str:
     """
-    Dump a dict to JSON and put into ``aiohttp.web.Response``.
+    Dump JSON-serializable data to JSON.
 
-    ``args`` and ``kwargs`` will be passed to ``aiohttp.web.Response``
+    Annoyances this function aviods:
+        - stdlib ``json`` cannot dump Decimals
+        - unicode characters are normally unnecessarily escaped
 
-    :param response_data: JSON to respond with
     :return: bytes with JSON that may contain unescaped (in JSON domain) unicode characters
     """
-    json_resp = simplejson.dumps(response_data, ensure_ascii=False).encode()
-    return Response(body=json_resp, *args, **kwargs)
+    return simplejson.dumps(data, ensure_ascii=False)
+
+
+json_response = partial(original_json_response, dumps=dump_to_json)
