@@ -17,7 +17,7 @@ from planningpoker.persistence import BasePersistence, ProcessMemoryPersistence
 
 
 @asyncio.coroutine
-def init(loop, host: str, port: int, secret_key: str, persistence: BasePersistence):
+async def init(loop, host: str, port: int, secret_key: str, persistence: BasePersistence):
     """Initialize the application."""
     app = web.Application(
         loop=loop,
@@ -27,7 +27,6 @@ def init(loop, host: str, port: int, secret_key: str, persistence: BasePersisten
     for name, (method, path, handler) in routes.items():
 
         def add_persistence_to_handler(handler):
-            @asyncio.coroutine
             @wraps(handler)
             def handler_with_persistence(*args, **kwargs):
                 return handler(*args, persistence=persistence, **kwargs)
@@ -40,21 +39,13 @@ def init(loop, host: str, port: int, secret_key: str, persistence: BasePersisten
     static_dir = os.path.join(os.path.dirname(__file__), 'static/')
     app.router.add_static('/static', static_dir, name='Static')
 
-    def make_static_resource(static_file_path: str):
-        """
-        Create a handler that resolves to static file.
+    async def static_index(request):
+        route = web.StaticRoute(None, '/', static_dir)
+        request.match_info['filename'] = 'index.html'
+        return await route.handle(request)
 
-        :param static_file_path: a path to the static file, relative to the static files directory
-        """
-        @asyncio.coroutine
-        def static_view(request):
-            request.match_info['filename'] = static_file_path
-            return app.router['Static'].handle(request)
-        return static_view
-
-    app.router.add_route('GET', '/', make_static_resource('html/index.html'))
-
-    srv = yield from loop.create_server(app.make_handler(), host, port)
+    app.router.add_route('GET', '/', static_index)
+    srv = await loop.create_server(app.make_handler(), host, port)
     print('HTTP server started at %s:%s' % (host, port), file=sys.stderr)
     return srv
 

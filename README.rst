@@ -1,7 +1,7 @@
 planningpoker
 =============
 
-Planning poker web application - in Python 3, React.js and ES6.
+Planning poker web application - in Python 3.5, React.js and ES6.
 
 https://en.wikipedia.org/wiki/Planning_poker
 
@@ -50,9 +50,13 @@ Frontend is in progress.
 System requirements
 ===================
 
-Currently supporting Python 3.4 and 3.4 only.
+Currently supporting Python 3.5 and 3.5 only.
 
 Recommended Node.js 4+.
 
-Python 3 header files are required to compile ``cryptography``. See
+Python 3.5 header files are required to compile ``cryptography``. See
 http://cryptography.readthedocs.org/en/latest/installation/#building-cryptography-on-linux
+
+You will get them automatically if you use pyenv_.
+
+.. _pyenv: https://github.com/yyuu/pyenv

@@ -12,10 +12,10 @@ from planningpoker.views.identity import get_or_assign_id, get_id
 
 
 @route('POST', '/game/{game_id}/join')
-def join_game(request, persistence):
+async def join_game(request, persistence):
     """Join a game and provide a name."""
     game_id = request.match_info['game_id']
-    json = yield from request.json(loads=loads_or_empty)
+    json = await request.json(loads=loads_or_empty)
 
     try:
         player_name = json['name']
@@ -25,7 +25,7 @@ def join_game(request, persistence):
     if len(player_name) < 1:
         return json_response({'error': 'The name must not be empty.'}, status=400)
 
-    player_session = yield from get_session(request)
+    player_session = await get_session(request)
     player_id = get_or_assign_id(player_session)
 
     try:
@@ -43,12 +43,12 @@ def join_game(request, persistence):
 
 
 @route('POST', '/game/{game_id}/round/{round_name}/vote')
-def cast_vote(request, persistence):
+async def cast_vote(request, persistence):
     """Vote in the active poll in the round."""
     game_id = request.match_info['game_id']
     round_name = request.match_info['round_name']
-    json = yield from request.json(loads=loads_or_empty)
-    player_session = yield from get_session(request)
+    json = await request.json(loads=loads_or_empty)
+    player_session = await get_session(request)
     player_id = get_id(player_session)
 
     try:

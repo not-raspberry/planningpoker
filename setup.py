@@ -11,7 +11,7 @@ with open(os.path.join(here, 'README.rst')) as f:
 
 # Requirements specified up to the minor version to allow bugfixes to be automatically applied.
 REQUIREMENTS = [
-    'aiohttp==0.21',
+    'aiohttp==0.21.5',
     'aiohttp_session[secure]==0.5.0',
     'simplejson==3.8',  # A JSON library that does not fear Decimals.
     'click==6.6',
