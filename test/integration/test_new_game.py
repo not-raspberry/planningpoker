@@ -2,8 +2,8 @@
 import pytest
 
 
-def test_create_new_game_no_cards_error(client):
-    """Check if when the 'cards' POST parameter is missing, an error is returned."""
+def test_create_new_game_missing_fields_error(client):
+    """Check if when one of the params is missing or blank, an error is returned."""
     no_post_data = client.post('/new_game')
     assert no_post_data.status_code == 400
     assert no_post_data.json()['error'] == 'No card set provided.'
@@ -18,20 +18,35 @@ def test_create_new_game_no_cards_error(client):
     empty_cards_param = both_request_params.copy()
     empty_cards_param['cards'] = []
 
-    # Params list in query string, not in POST data.
+    empty_moderator_name_param = both_request_params.copy()
+    empty_moderator_name_param['moderator_name'] = ''
+
+    # Params list in query string, not in POST data as JSON:
     params_in_query = client.post('/new_game', query=both_request_params)
     assert params_in_query.status_code == 400
 
-    no_cards = client.post('/new_game', query=name_param)
+    # Params list in as application/x-www-form-urlencoded, not as JSON:
+    params_in_query = client.post('/new_game', data=both_request_params)
+    assert params_in_query.status_code == 400
+
+    no_cards = client.post('/new_game', json=name_param)
     assert no_cards.status_code == 400
 
-    no_moderator_name = client.post('/new_game', query=cards_param)
+    blank_moderator_name = client.post('/new_game', json=cards_param)
+    assert blank_moderator_name.status_code == 400
+
+    no_moderator_name = client.post('/new_game', json=empty_moderator_name_param)
     assert no_moderator_name.status_code == 400
 
     empty_cards_list = client.post('/new_game', json=empty_cards_param)
     assert empty_cards_list.status_code == 400
 
     assert client.get('/status').json()['games_count'] == 0
+
+    # Sanity check - pass a valid request finally.
+    params_in_query = client.post('/new_game', json=both_request_params)
+    assert params_in_query.status_code == 200
+    assert client.get('/status').json()['games_count'] == 1
 
 
 @pytest.mark.parametrize('cards', [
@@ -60,9 +75,9 @@ def test_create_new_game_ok(client, cards):
     new_game = client.post('/new_game', json={'cards': cards, 'moderator_name': moderator_name})
     json = new_game.json()
 
-    # Random game ID returned (no real way to test randomness):
     assert json.keys() == {'game_id', 'game'}
     assert isinstance(json['game_id'], str)
+    # Random game ID returned (no real way to test randomness):
     assert len(json['game_id']) > 10
 
     # Empty game is returned.

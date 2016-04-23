@@ -25,9 +25,8 @@ async def add_game(request, persistence):
     except KeyError:
         return json_response({'error': 'No card set provided.'}, status=400)
 
-    try:
-        moderator_name = json['moderator_name']
-    except KeyError:
+    moderator_name = json.get('moderator_name', '')
+    if moderator_name == '':
         return json_response({'error': 'Moderator name not provided.'}, status=400)
 
     if len(available_cards) < 2:
